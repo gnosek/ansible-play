@@ -1,0 +1,62 @@
+DOCUMENTATION = '''
+---
+module: play
+short_description: Group statements with common items/conditions
+description:
+     - This module executes all modules just like a top-level play
+       but allows all normal task attributes (e.g. with_items).
+       It is useful as a replacement of include when it would be
+       awkward (e.g. creating one/two line included files), factoring
+       out repetitive task attributes (when/sudo/remote_user etc.)
+       including the unsupported include/with_items combination.
+
+       Handlers, notify, vars, vars_prompt and tags are not supported
+       in the nested play, only for the `play` task itself).
+
+       All variables set (by e.g. register) are propagated outside
+       the play and may be used in subsequent tasks
+
+       Note: gather_facts defaults to false in embedded plays
+
+       Note: This module (ab)uses internal Ansible APIs and is not
+       guaranteed to work across all possible versions
+options:
+  tasks:
+    description:
+      - A list of tasks to execute, just like in the top-level play
+        message.
+    required: true
+  handlers:
+    description:
+      - A list of handlers, just like in the top-level play
+        message.
+    required: true
+author: Grzegorz Nosek
+'''
+
+EXAMPLES = '''
+# Run a couple of tasks as a different user
+- play:
+    tasks:
+    - postgresql_user: name=someuser
+    - postgresql_db: name=somedb owner=someuser
+  sudo: true
+  sudo_user: postgres
+
+# Loop over a couple of tasks
+- play:
+    tasks:
+    - git: repo=http://example.com/{{ item.git }} dest=/usr/local/src/{{ item }}
+    - command: make install chdir=/usr/local/src/{{ item }}
+  with_items:
+  - foo
+  - bar
+
+# The elusive include with_items
+- play:
+    tasks:
+    - include: install.yml pkg={{ item }}
+  with_items:
+  - foo
+  - bar
+'''
